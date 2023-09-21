@@ -27,28 +27,36 @@ Jimp.read("./" + file).then(async img => {
     })
 
     function optimize(obj, distance) {
-        let scan = true
-        Object.keys(obj).forEach((x, y) => {
-            if (!obj[x] || obj[x][3] || !scan) return
-            let xy = x.split(",").map(x => +x)
-    
-            let rightXY = (xy[0]) + "," + (xy[1] + distance)
-            let downXY = (xy[0] + distance) + "," + (xy[1])
-            let diaXY = (xy[0] + distance) + "," + (xy[1] + distance)
-    
-            let col = obj[x] || []
-            let right = (obj[rightXY] || []).join(" ")
-            let down = (obj[downXY] || []).join(" ")
-            let dia = (obj[diaXY] || []).join(" ")
+        let scan = true;
+        const updatedObj = {};
+        const pixels = {};
+        
+        Object.entries(obj).forEach(([x, col]) => {
+            if (!col || col[3] || !scan) return;
+            const [xCoord, yCoord] = x.split(",").map(Number);
 
-            if (col.join(" ") == right && right == down && down == dia) {
-                pixels[distance*2][x] = col
-                delete obj[x]; delete obj[rightXY]; delete obj[downXY]; delete obj[diaXY]
-                scan = false
+            const rightXY = `${xCoord},${yCoord + distance}`;
+            const downXY = `${xCoord + distance},${yCoord}`;
+            const diaXY = `${xCoord + distance},${yCoord + distance}`;
+
+            const right = (obj[rightXY] || []).join(" ");
+            const down = (obj[downXY] || []).join(" ");
+            const dia = (obj[diaXY] || []).join(" ");
+
+            if (col.join(" ") === right && right === down && down === dia) {
+                pixels[distance * 2][x] = col;
+                delete obj[x];
+                delete obj[rightXY];
+                delete obj[downXY];
+                delete obj[diaXY];
+                scan = false;
+            } else {
+                col.push(true);
+                updatedObj[x] = col;
             }
-            else obj[x].push(true)
-        })
-        return obj
+        });
+
+        return { ...updatedObj, ...obj };
     }
 
     let pixelCount = Object.keys(pixels[1]).length

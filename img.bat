@@ -1,2 +1,0 @@
-node img.js
-pause
